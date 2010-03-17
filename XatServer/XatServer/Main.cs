@@ -1,4 +1,5 @@
 using System;
+using System.Net;
 using System.Net.Sockets;
 using System.IO;
 
@@ -10,7 +11,7 @@ namespace XatServer
 		{
 			Console.WriteLine("Hola, sóc el servidor!");
 			
-			Server servidor = new Server(9898);
+			Server servidor = new Server("192.168.130.24", 6969);
 			
 			if (!servidor.Start())
 			{
@@ -20,7 +21,10 @@ namespace XatServer
 			if (servidor.WaitForAClient())
 			{
 				// Escribim tot el que ens envii el client
-				Console.WriteLine("El client diu: " + servidor.ReadLine()); 
+				while (true)
+				{
+					Console.WriteLine("El client diu: " + servidor.ReadLine());
+				}
 				
 				// server.WriteLine("Hi!"); 
 			}
@@ -29,32 +33,35 @@ namespace XatServer
 	
 	public class Server
 	{
-		private StreamReader reader;
-		private StreamWriter writer;
-		private int port;
+		private NetworkStream netStream;
+		private StreamReader readerStream;
+		private StreamWriter writerStream;
+		private IPEndPoint server_endpoint;
 		private TcpListener listener;
 		
-		public Server(int port)
+		public Server(string ip, int port)
 		{
-			this.port = port;
+			IPAddress address = IPAddress.Parse(ip);
+			server_endpoint = new IPEndPoint(address, port);
 		}
 		
 		public string ReadLine()
 		{
-			return reader.ReadLine();
+			return readerStream.ReadLine();
 		}
 		
 		public void WriteLine(string str)
 		{
-			writer.WriteLine(str);
-			writer.Flush();
+			writerStream.WriteLine(str);
+			writerStream.Flush();
 		}
 		
 		public bool Start()
 		{
 			try
 			{
-				listener = new TcpListener(port);
+				listener = new TcpListener(server_endpoint);
+
 				listener.Start(); //start server
 			}
 			catch(Exception e)
@@ -63,7 +70,7 @@ namespace XatServer
 				return false;
 			}
 		
-			Console.WriteLine("Servidor engegat, escoltant al port {0}", port);
+			Console.WriteLine("Servidor engegat, escoltant a {0}:{1}", server_endpoint.Address, server_endpoint.Port);
 			
 			return true;
 		}
@@ -77,10 +84,10 @@ namespace XatServer
 			{
 				if (serverSocket.Connected)
 				{
-					NetworkStream netStream = new NetworkStream(serverSocket);
+					netStream = new NetworkStream(serverSocket);
 					
-					writer = new StreamWriter(netStream);
-					reader = new StreamReader(netStream);
+					writerStream = new StreamWriter(netStream);
+					readerStream = new StreamReader(netStream);
 				}
 			}
 			catch(Exception e)
