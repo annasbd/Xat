@@ -60,7 +60,8 @@ namespace XatServer
 		{
 			try
 			{
-				listener = new TcpListener(server_endpoint);
+//				listener = new TcpListener(server_endpoint);
+				listener = new TcpListener(9898);
 
 				listener.Start(); //start server
 			}
